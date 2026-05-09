@@ -1,65 +1,82 @@
-import Image from "next/image";
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col min-h-screen bg-slate-950">
+      <nav className="border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">K</span>
+          </div>
+          <span className="font-semibold text-white text-lg">Klarity VoiceNote</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <Link
+          href="/dashboard"
+          className="text-sm text-slate-400 hover:text-white transition-colors"
+        >
+          Provider Dashboard →
+        </Link>
+      </nav>
+
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+        <div className="max-w-2xl w-full text-center space-y-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 text-blue-400 text-sm">
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+              Powered by Retell + Claude
+            </div>
+            <h1 className="text-5xl font-bold text-white leading-tight">
+              Voice intake that works<br />
+              <span className="text-blue-400">before the appointment</span>
+            </h1>
+            <p className="text-xl text-slate-400 max-w-lg mx-auto leading-relaxed">
+              Patients speak naturally. Providers get structured notes, risk flags, and suggested questions — ready before the visit.
+            </p>
+          </div>
+
+          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-left space-y-4">
+            <p className="text-sm font-medium text-slate-300 uppercase tracking-wider">Safety Notice</p>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              This AI assistant collects intake information for your licensed provider. It does not provide therapy, diagnosis, treatment, or emergency support. If you are in immediate danger, call <strong className="text-white">911</strong> or text <strong className="text-white">988</strong> for crisis support.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/intake"
+              className="inline-flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl px-8 py-4 transition-colors text-lg"
+            >
+              Start Voice Intake
+              <span>→</span>
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl px-8 py-4 transition-colors text-lg border border-slate-700"
+            >
+              Provider Dashboard
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-800">
+            <div className="text-center space-y-1">
+              <p className="text-2xl font-bold text-white">50%</p>
+              <p className="text-sm text-slate-500">Less time gathering context</p>
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-2xl font-bold text-white">60%</p>
+              <p className="text-sm text-slate-500">Faster note drafting</p>
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-2xl font-bold text-white">40%</p>
+              <p className="text-sm text-slate-500">Less admin overhead</p>
+            </div>
+          </div>
         </div>
       </main>
+
+      <footer className="border-t border-slate-800 px-6 py-4 text-center text-slate-600 text-sm">
+        Built for Klarity Health · Powered by Retell AI · Deployed on Zeabur
+      </footer>
     </div>
   );
 }

@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Klarity VoiceNote
 
-## Getting Started
+> Retell-powered AI voice intake that turns patient conversations into provider-reviewed mental health notes.
 
-First, run the development server:
+## What it does
+
+Patients complete a natural voice intake before a psychiatry or therapy visit. The AI collects patient-reported context, then generates a structured SOAP note draft, risk flags, and suggested provider questions — ready before the appointment.
+
+**Not a therapist. Not a diagnosis tool. A documentation assistant.**
+
+## Sponsors
+
+- **Retell AI** — voice conversation + post-call analysis
+- **Anthropic Claude** — transcript → structured SOAP note generation
+- **Zeabur** — deployment
+- **Klarity Health** — target customer (mental health practice workflow)
+
+## Stack
+
+- Next.js 16 (App Router)
+- Tailwind CSS
+- Retell SDK
+- Anthropic SDK (claude-sonnet-4-6)
+- SQLite (better-sqlite3)
+- Zeabur
+
+## Local setup
 
 ```bash
+npm install
+cp .env.local.example .env.local
+# Add RETELL_API_KEY, RETELL_AGENT_ID, ANTHROPIC_API_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Works in demo mode without any API keys — uses a preloaded transcript + Claude fallback.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Description |
+|---|---|
+| `/` | Landing page |
+| `/intake` | Patient voice intake flow |
+| `/dashboard` | Provider queue with risk badges |
+| `/dashboard/[noteId]` | Full note review + approve |
 
-## Learn More
+## Env vars
 
-To learn more about Next.js, take a look at the following resources:
+```
+RETELL_API_KEY=
+RETELL_AGENT_ID=
+ANTHROPIC_API_KEY=
+NEXT_PUBLIC_APP_URL=https://your-zeabur-url
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Retell webhook
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Set your Retell agent webhook URL to: `https://your-domain/api/retell-webhook`

@@ -20,7 +20,7 @@ Patients complete a natural voice intake before a psychiatry or therapy visit. T
 - Next.js 16 (App Router)
 - Tailwind CSS
 - Retell SDK
-- Anthropic SDK (claude-sonnet-4-6)
+- Anthropic SDK (claude-sonnet-4-5)
 - SQLite (better-sqlite3)
 - Zeabur
 
@@ -28,7 +28,7 @@ Patients complete a natural voice intake before a psychiatry or therapy visit. T
 
 ```bash
 npm install
-cp .env.local.example .env.local
+cp .env.example .env.local
 # Add RETELL_API_KEY, RETELL_AGENT_ID, ANTHROPIC_API_KEY
 npm run dev
 ```

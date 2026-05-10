@@ -1,9 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 
+// Dynamically imported to avoid SSR issues with browser audio APIs.
+// RetellWebClient accesses window/navigator so it must only run client-side.
+type RetellWebClientType = import('retell-client-js-sdk').RetellWebClient;
+
 type Step = 'form' | 'consent' | 'calling' | 'complete';
+
+interface TranscriptUtterance {
+  role: 'agent' | 'user';
+  content: string;
+}
 
 export default function IntakePage() {
   const [step, setStep] = useState<Step>('form');
@@ -11,9 +20,84 @@ export default function IntakePage() {
   const [appointmentType, setAppointmentType] = useState('Initial consultation');
   const [ageRange, setAgeRange] = useState('');
   const [consented, setConsented] = useState(false);
-  const [callData, setCallData] = useState<{ callId: string; patientId: string; demoMode?: boolean } | null>(null);
+  const [callData, setCallData] = useState<{
+    callId: string;
+    patientId: string;
+    demoMode?: boolean;
+    accessToken?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+
+  // Retell live call state
+  const [callActive, setCallActive] = useState(false);
+  const [callStarted, setCallStarted] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const [retellError, setRetellError] = useState<string | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState<TranscriptUtterance[]>([]);
+  const [agentTalking, setAgentTalking] = useState(false);
+
+  const retellClientRef = useRef<RetellWebClientType | null>(null);
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+
+  const startRetellCall = useCallback(async (accessToken: string) => {
+    try {
+      // Dynamic import keeps RetellWebClient out of SSR bundle
+      const { RetellWebClient } = await import('retell-client-js-sdk');
+      const client = new RetellWebClient();
+      retellClientRef.current = client;
+
+      client.on('call_started', () => {
+        setCallStarted(true);
+        setCallActive(true);
+        setRetellError(null);
+      });
+
+      client.on('call_ended', () => {
+        setCallActive(false);
+        setCallEnded(true);
+        // Transition to complete after a short pause so the user sees the ended state
+        setTimeout(() => setStep('complete'), 1500);
+      });
+
+      client.on('agent_start_talking', () => setAgentTalking(true));
+      client.on('agent_stop_talking', () => setAgentTalking(false));
+
+      client.on('update', (update) => {
+        // update.transcript is the last ~5 utterances
+        if (update && Array.isArray(update.transcript)) {
+          setLiveTranscript(
+            update.transcript.map((u: { role: string; content: string }) => ({
+              role: u.role as 'agent' | 'user',
+              content: u.content,
+            }))
+          );
+        }
+      });
+
+      client.on('error', (error) => {
+        console.error('Retell error:', error);
+        setRetellError(typeof error === 'string' ? error : 'An error occurred during the call.');
+        client.stopCall();
+        setCallActive(false);
+      });
+
+      await client.startCall({ accessToken });
+    } catch (err) {
+      console.error('Failed to start Retell call:', err);
+      setRetellError('Could not start voice call. Check microphone permissions and try again.');
+    }
+  }, []);
+
+  const stopRetellCall = useCallback(() => {
+    retellClientRef.current?.stopCall();
+    setCallActive(false);
+    setCallEnded(true);
+    setTimeout(() => setStep('complete'), 800);
+  }, []);
+
+  // ── API calls ─────────────────────────────────────────────────────────────
 
   async function startCall() {
     setLoading(true);
@@ -26,6 +110,11 @@ export default function IntakePage() {
       const data = await res.json();
       setCallData(data);
       setStep('calling');
+
+      // If we got a real accessToken, start the browser audio call immediately
+      if (!data.demoMode && data.accessToken) {
+        await startRetellCall(data.accessToken);
+      }
     } catch {
       alert('Failed to start call. Try again.');
     } finally {
@@ -50,6 +139,8 @@ export default function IntakePage() {
     }
   }
 
+  // ── render ────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
       <nav className="border-b border-slate-800 px-6 py-4 flex items-center justify-between">
@@ -64,6 +155,8 @@ export default function IntakePage() {
 
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-lg space-y-6">
+
+          {/* ── FORM ─────────────────────────────────────────────── */}
           {step === 'form' && (
             <>
               <div>
@@ -131,6 +224,7 @@ export default function IntakePage() {
             </>
           )}
 
+          {/* ── CONSENT ──────────────────────────────────────────── */}
           {step === 'consent' && (
             <>
               <div>
@@ -175,25 +269,31 @@ export default function IntakePage() {
             </>
           )}
 
+          {/* ── CALLING ──────────────────────────────────────────── */}
           {step === 'calling' && (
             <>
               <div>
                 <h1 className="text-3xl font-bold text-white">
-                  {callData?.demoMode ? 'Demo Mode' : 'Voice Intake Active'}
+                  {callData?.demoMode ? 'Demo Mode' : callEnded ? 'Call Ended' : callStarted ? 'Voice Intake Active' : 'Connecting…'}
                 </h1>
                 <p className="mt-2 text-slate-400">
                   {callData?.demoMode
                     ? 'Retell not configured. Use demo transcript to generate a sample note.'
-                    : 'Speak naturally with the AI intake assistant.'}
+                    : callEnded
+                    ? 'Processing your intake…'
+                    : callStarted
+                    ? 'Speak naturally with the AI intake assistant.'
+                    : 'Please allow microphone access when prompted.'}
                 </p>
               </div>
 
+              {/* ── DEMO MODE ── */}
               {callData?.demoMode ? (
                 <div className="space-y-4">
                   <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 space-y-3">
                     <p className="text-sm font-medium text-slate-300">Demo transcript preview:</p>
                     <p className="text-xs text-slate-500 leading-relaxed line-clamp-4">
-                      Patient reports increased anxiety for the past month, chest tightness at night, sleep disruption of 4-5 hours, academic stress from finals and grad school applications...
+                      Patient reports increased anxiety for the past month, chest tightness at night, sleep disruption of 4-5 hours, academic stress from finals and grad school applications…
                     </p>
                   </div>
                   <button
@@ -201,29 +301,93 @@ export default function IntakePage() {
                     disabled={demoLoading}
                     className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 text-white font-semibold rounded-xl px-6 py-4 transition-colors"
                   >
-                    {demoLoading ? 'Generating note...' : 'Use Demo Transcript + Generate Note'}
+                    {demoLoading ? 'Generating note…' : 'Use Demo Transcript + Generate Note'}
                   </button>
                 </div>
               ) : (
+                /* ── LIVE RETELL CALL ── */
                 <div className="space-y-4">
-                  <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 text-center space-y-4">
-                    <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full animate-pulse"></div>
+                  {/* Error banner */}
+                  {retellError && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-300">
+                      {retellError}
                     </div>
-                    <p className="text-slate-300">Retell call initiated. Speak when ready.</p>
+                  )}
+
+                  {/* Audio visualiser / status orb */}
+                  <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 text-center space-y-4">
+                    <div className="relative w-16 h-16 mx-auto">
+                      {/* Outer pulse ring – active when agent is talking */}
+                      {agentTalking && (
+                        <span className="absolute inset-0 rounded-full bg-blue-500/30 animate-ping" />
+                      )}
+                      <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center">
+                        <div
+                          className={`w-6 h-6 rounded-full transition-colors duration-300 ${
+                            callEnded
+                              ? 'bg-slate-500'
+                              : callActive
+                              ? agentTalking
+                                ? 'bg-blue-400 animate-pulse'
+                                : 'bg-blue-500'
+                              : 'bg-slate-600 animate-pulse'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    <p className="text-slate-300">
+                      {callEnded
+                        ? 'Call ended. Processing your intake…'
+                        : callActive
+                        ? agentTalking
+                          ? 'Agent is speaking…'
+                          : 'Listening… speak when ready.'
+                        : 'Connecting to AI intake assistant…'}
+                    </p>
                     <p className="text-xs text-slate-500">Call ID: {callData?.callId}</p>
                   </div>
-                  <button
-                    onClick={() => setStep('complete')}
-                    className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl px-6 py-4 transition-colors"
-                  >
-                    Call Complete — View Summary
-                  </button>
+
+                  {/* Live transcript */}
+                  {liveTranscript.length > 0 && (
+                    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-2 max-h-48 overflow-y-auto">
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Live transcript</p>
+                      {liveTranscript.map((u, i) => (
+                        <div key={i} className={`text-sm ${u.role === 'agent' ? 'text-blue-300' : 'text-slate-300'}`}>
+                          <span className="font-semibold text-xs uppercase mr-2 opacity-60">
+                            {u.role === 'agent' ? 'Agent' : 'You'}
+                          </span>
+                          {u.content}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* End Call button — only shown once the call is active and not yet ended */}
+                  {callActive && !callEnded && (
+                    <button
+                      onClick={stopRetellCall}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-6 py-4 transition-colors"
+                    >
+                      End Call
+                    </button>
+                  )}
+
+                  {/* Fallback manual advance — only visible after call ends without auto-redirect */}
+                  {callEnded && (
+                    <button
+                      onClick={() => setStep('complete')}
+                      className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl px-6 py-4 transition-colors"
+                    >
+                      View Summary →
+                    </button>
+                  )}
                 </div>
               )}
             </>
           )}
 
+          {/* ── COMPLETE ─────────────────────────────────────────── */}
           {step === 'complete' && (
             <div className="text-center space-y-6">
               <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
@@ -238,11 +402,12 @@ export default function IntakePage() {
               <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-sm text-slate-400">
                 You do not need to do anything else. If this was urgent, please contact your provider directly.
               </div>
-              <Link href="/" className="inline-block text-blue-400 hover:text-blue-300 transition-colors">
-                ← Back to home
+              <Link href="/dashboard" className="inline-block text-blue-400 hover:text-blue-300 transition-colors">
+                View provider dashboard →
               </Link>
             </div>
           )}
+
         </div>
       </main>
     </div>

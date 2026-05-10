@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 import { DEMO_TRANSCRIPT } from '@/lib/demo';
-import { v4 as uuidv4 } from 'uuid';
 
 // One-shot endpoint: generate a note from demo transcript for a given callId
 export async function POST(req: NextRequest) {

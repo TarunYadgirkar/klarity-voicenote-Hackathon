@@ -45,9 +45,14 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    fetchPatients();
+    const timeout = setTimeout(() => {
+      void fetchPatients();
+    }, 0);
     const interval = setInterval(fetchPatients, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, []);
 
   const urgent = patients.filter((p) => p.risk_level === 'high' || p.note_status === 'urgent_review');

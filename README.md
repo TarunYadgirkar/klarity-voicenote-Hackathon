@@ -11,7 +11,7 @@ Patients complete a natural voice intake before a psychiatry or therapy visit. T
 ## Sponsors
 
 - **Retell AI** — voice conversation + post-call analysis
-- **Anthropic Claude** — transcript → structured SOAP note generation
+- **Google Gemini** — transcript → structured SOAP note generation
 - **Zeabur** — deployment
 - **Klarity Health** — target customer (mental health practice workflow)
 
@@ -20,7 +20,7 @@ Patients complete a natural voice intake before a psychiatry or therapy visit. T
 - Next.js 16 (App Router)
 - Tailwind CSS
 - Retell SDK
-- Anthropic SDK (claude-sonnet-4-5)
+- Google Gemini API (gemini-2.5-flash-lite)
 - SQLite (better-sqlite3)
 - Zeabur
 
@@ -29,11 +29,11 @@ Patients complete a natural voice intake before a psychiatry or therapy visit. T
 ```bash
 npm install
 cp .env.example .env.local
-# Add RETELL_API_KEY, RETELL_AGENT_ID, ANTHROPIC_API_KEY
+# Add RETELL_API_KEY, RETELL_AGENT_ID, GEMINI_API_KEY
 npm run dev
 ```
 
-Works in demo mode without any API keys — uses a preloaded transcript + Claude fallback.
+Works in demo mode without any API keys — uses a preloaded transcript + note fallback.
 
 ## Routes
 
@@ -49,7 +49,8 @@ Works in demo mode without any API keys — uses a preloaded transcript + Claude
 ```
 RETELL_API_KEY=
 RETELL_AGENT_ID=
-ANTHROPIC_API_KEY=
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash-lite
 NEXT_PUBLIC_APP_URL=https://your-zeabur-url
 ```
 

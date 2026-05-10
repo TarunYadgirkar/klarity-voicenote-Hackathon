@@ -32,6 +32,32 @@ const RISK_COLORS: Record<string, string> = {
   none: 'bg-slate-700 text-slate-400 border-slate-600',
 };
 
+function buildSoapText(n: Note) {
+  return `AI Draft — Provider Review Required
+
+Patient Summary:
+${n.ai_summary || ''}
+
+Chief Concern:
+${n.chief_concern || ''}
+
+Patient-Reported Symptoms:
+${(n.symptoms_reported || []).map((s) => `- ${s}`).join('\n')}
+
+SOAP Note Draft:
+S — Subjective:
+${n.soap_subjective || ''}
+
+O — Objective:
+${n.soap_objective || ''}
+
+A — Assessment:
+${n.soap_assessment || ''}
+
+P — Plan:
+${n.soap_plan || ''}`;
+}
+
 export default function NoteDetailPage({ params }: { params: Promise<{ noteId: string }> }) {
   const { noteId } = use(params);
   const [note, setNote] = useState<Note | null>(null);
@@ -78,32 +104,6 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
     }
     setSaving(false);
     setEditing(false);
-  }
-
-  function buildSoapText(n: Note) {
-    return `AI Draft — Provider Review Required
-
-Patient Summary:
-${n.ai_summary || ''}
-
-Chief Concern:
-${n.chief_concern || ''}
-
-Patient-Reported Symptoms:
-${(n.symptoms_reported || []).map((s) => `- ${s}`).join('\n')}
-
-SOAP Note Draft:
-S — Subjective:
-${n.soap_subjective || ''}
-
-O — Objective:
-${n.soap_objective || ''}
-
-A — Assessment:
-${n.soap_assessment || ''}
-
-P — Plan:
-${n.soap_plan || ''}`;
   }
 
   if (loading) {

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import getDb from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import type { NoteGenerationResult } from '@/types';
@@ -51,7 +50,7 @@ export async function POST(req: NextRequest) {
   const { callId, transcript, patientId } = await req.json();
   const db = getDb();
 
-  let resolvedCallId = callId;
+  const resolvedCallId = callId;
   let resolvedTranscript = transcript;
   let resolvedPatientId = patientId;
 
@@ -67,29 +66,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No transcript' }, { status: 400 });
   }
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
   let result: NoteGenerationResult;
 
-  if (!anthropicKey || anthropicKey === 'your_anthropic_api_key') {
+  if (!geminiKey || geminiKey === 'your_gemini_api_key_here') {
     result = getDemoNote();
   } else {
     try {
-      const client = new Anthropic({ apiKey: anthropicKey });
-      const message = await client.messages.create({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 2048,
-        messages: [
-          {
-            role: 'user',
-            content: `${PROMPT}\n\nTranscript:\n${resolvedTranscript}`,
-          },
-        ],
-      });
-      const text = message.content[0].type === 'text' ? message.content[0].text : '';
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      result = jsonMatch ? JSON.parse(jsonMatch[0]) : getDemoNote();
+      result = await generateNoteWithGemini(geminiKey, resolvedTranscript);
     } catch (err) {
-      console.error('Anthropic error:', err);
+      console.error('Gemini error:', err);
       result = getDemoNote();
     }
   }
@@ -149,6 +135,42 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, noteId, result });
+}
+
+async function generateNoteWithGemini(apiKey: string, transcript: string): Promise<NoteGenerationResult> {
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: `${PROMPT}\n\nTranscript:\n${transcript}` }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 2048,
+          responseMimeType: 'application/json',
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Gemini returned ${response.status}: ${await response.text()}`);
+  }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error('Gemini response did not include text output');
+  }
+
+  return JSON.parse(text) as NoteGenerationResult;
 }
 
 function getDemoNote(): NoteGenerationResult {

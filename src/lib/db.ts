@@ -3,16 +3,24 @@ import path from 'path';
 import fs from 'fs';
 
 const DB_DIR = path.join(process.cwd(), '.data');
-const DB_PATH = path.join(DB_DIR, 'klarity.db');
+const DEFAULT_DB_PATH = path.join(DB_DIR, 'klarity.db');
 
 let db: Database.Database;
 
-function getDb(): Database.Database {
+function getDb(dbPath?: string): Database.Database {
+  const resolvedPath = dbPath ?? process.env.DB_PATH ?? DEFAULT_DB_PATH;
+  // Always open a fresh connection for non-default paths (e.g. :memory: in tests)
+  if (dbPath || process.env.DB_PATH) {
+    const connection = new Database(resolvedPath);
+    connection.pragma('journal_mode = WAL');
+    initSchema(connection);
+    return connection;
+  }
   if (!db) {
     if (!fs.existsSync(DB_DIR)) {
       fs.mkdirSync(DB_DIR, { recursive: true });
     }
-    db = new Database(DB_PATH);
+    db = new Database(resolvedPath);
     db.pragma('journal_mode = WAL');
     initSchema(db);
   }

@@ -5,26 +5,33 @@ import fs from 'fs';
 const DB_DIR = path.join(process.cwd(), '.data');
 const DEFAULT_DB_PATH = path.join(DB_DIR, 'klarity.db');
 
-let db: Database.Database;
+// Singleton cache per resolved path; :memory: is always ephemeral
+const connections = new Map<string, Database.Database>();
 
 function getDb(dbPath?: string): Database.Database {
   const resolvedPath = dbPath ?? process.env.DB_PATH ?? DEFAULT_DB_PATH;
-  // Always open a fresh connection for non-default paths (e.g. :memory: in tests)
-  if (dbPath || process.env.DB_PATH) {
-    const connection = new Database(resolvedPath);
-    connection.pragma('journal_mode = WAL');
-    initSchema(connection);
-    return connection;
+
+  // :memory: databases cannot be meaningfully shared; always return a fresh one
+  if (resolvedPath === ':memory:') {
+    const conn = new Database(':memory:');
+    initSchema(conn);
+    return conn;
   }
-  if (!db) {
-    if (!fs.existsSync(DB_DIR)) {
-      fs.mkdirSync(DB_DIR, { recursive: true });
-    }
-    db = new Database(resolvedPath);
-    db.pragma('journal_mode = WAL');
-    initSchema(db);
+
+  if (connections.has(resolvedPath)) {
+    return connections.get(resolvedPath)!;
   }
-  return db;
+
+  const dir = path.dirname(resolvedPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  const conn = new Database(resolvedPath);
+  conn.pragma('journal_mode = WAL');
+  initSchema(conn);
+  connections.set(resolvedPath, conn);
+  return conn;
 }
 
 function initSchema(db: Database.Database) {

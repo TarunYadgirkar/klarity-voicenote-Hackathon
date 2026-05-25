@@ -60,8 +60,14 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ callId: dbCall.id, transcript, patientId: dbCall.patient_id }),
     });
 
-    const noteData = await noteRes.json();
-    return NextResponse.json({ ok: true, callId: dbCall.id, noteId: noteData.noteId, hasTranscript: !!transcript });
+    let noteId: string | undefined;
+    if (noteRes.ok) {
+      const noteData = await noteRes.json();
+      noteId = noteData.noteId;
+    } else {
+      console.error('generate-note failed:', noteRes.status, await noteRes.text());
+    }
+    return NextResponse.json({ ok: true, callId: dbCall.id, noteId, hasTranscript: !!transcript });
   } catch (err) {
     console.error('fetch-retell-call error:', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });

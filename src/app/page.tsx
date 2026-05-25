@@ -8,18 +8,18 @@ const fadeUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, 
 const features = [
   {
     emoji: '🎙️',
-    title: 'Voice Intake',
-    desc: 'Patients speak naturally with an AI agent before their appointment — no forms, no typing.',
+    title: 'Patients talk before they arrive',
+    desc: 'An AI voice agent walks your patient through intake at home, on their own time. No clipboards, no awkward first-five-minutes.',
   },
   {
     emoji: '📋',
-    title: 'AI Note Generation',
-    desc: 'Every call is transcribed and converted into a structured SOAP note draft via Gemini.',
+    title: 'You get a note, not a transcript',
+    desc: 'What they said gets turned into a structured SOAP draft — chief concern, symptoms, goals — ready to review before the session.',
   },
   {
     emoji: '🚩',
-    title: 'Risk Triage',
-    desc: 'AI assigns a risk level and flags concerns so providers know where to focus first.',
+    title: 'High-risk patients surface first',
+    desc: 'The AI flags anything that needs attention so you\'re not scanning through notes trying to figure out who needs you most.',
   },
 ];
 
@@ -42,17 +42,16 @@ export default function Home() {
         <section className="bg-white px-6 py-24 flex flex-col items-center text-center">
           <motion.div {...fadeUp} className="max-w-3xl space-y-6">
             <div className="inline-flex items-center gap-2 bg-[#00B894]/10 border border-[#00B894]/20 rounded-full px-4 py-1.5 text-[#00B894] text-sm font-medium">
-              <span className="w-2 h-2 bg-[#00B894] rounded-full animate-pulse" />
-              Powered by Retell + Gemini
+              Built for therapists and mental health practices
             </div>
 
             <h1 className="text-5xl font-bold text-[#0F172A] leading-tight">
-              Voice intake that works<br />
-              <span className="text-[#00B894]">before the appointment</span>
+              Your patients talk.<br />
+              <span className="text-[#00B894]">You walk in ready.</span>
             </h1>
 
             <p className="text-xl text-[#64748B] max-w-lg mx-auto leading-relaxed">
-              Patients speak naturally. Providers get structured notes, risk flags, and suggested questions — ready before the visit.
+              Klarity replaces your intake forms with a short AI voice conversation — before the appointment. You get a full clinical picture waiting for you, not a blank page.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
@@ -60,7 +59,7 @@ export default function Home() {
                 href="/intake"
                 className="inline-flex items-center justify-center gap-2 bg-[#00B894] hover:bg-[#00897B] text-white font-semibold rounded-xl px-8 py-4 transition-colors text-lg shadow-sm"
               >
-                Start Voice Intake <span>→</span>
+                Patient Intake <span>→</span>
               </Link>
               <Link
                 href="/dashboard"
@@ -97,15 +96,15 @@ export default function Home() {
           <div className="max-w-2xl mx-auto bg-amber-50 border border-amber-200 rounded-2xl p-6">
             <p className="text-sm font-semibold text-amber-700 uppercase tracking-wider mb-2">Safety Notice</p>
             <p className="text-amber-800 text-sm leading-relaxed">
-              This AI assistant collects intake information for your licensed provider. It does not provide therapy, diagnosis, treatment, or emergency support. If you are in immediate danger, call{' '}
-              <strong>911</strong> or text <strong>988</strong> for crisis support.
+              Klarity is an intake tool, not a therapist. It collects information for your licensed provider and doesn't offer diagnosis, treatment, or crisis support. If you or someone you know is in danger, call{' '}
+              <strong>911</strong> or text <strong>988</strong> to reach the Suicide & Crisis Lifeline.
             </p>
           </div>
         </section>
       </main>
 
       <footer className="bg-[#F8FAFC] border-t border-[#E2E8F0] px-6 py-4 text-center text-[#64748B] text-sm">
-        Built for Klarity Health · Powered by Retell AI · Deployed on Vercel
+        Klarity VoiceNote · AI-powered intake for mental health providers
       </footer>
     </div>
   );

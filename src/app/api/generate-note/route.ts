@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   let resolvedPatientId = patientId;
 
   if (!resolvedTranscript && resolvedCallId) {
-    const [call] = await sql`SELECT * FROM calls WHERE id = ${resolvedCallId}` as { transcript: string; patient_id: string }[] | undefined[];
+    const [call] = await sql`SELECT * FROM calls WHERE id = ${resolvedCallId}`;
     if (call) {
       resolvedTranscript = call.transcript;
       resolvedPatientId = call.patient_id;

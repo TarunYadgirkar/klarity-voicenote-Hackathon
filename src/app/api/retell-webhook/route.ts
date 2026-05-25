@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   const retellCallId = call.call_id;
-  const [dbCall] = await sql`SELECT * FROM calls WHERE retell_call_id = ${retellCallId}` as { id: string; patient_id: string }[] | undefined[];
+  const [dbCall] = await sql`SELECT * FROM calls WHERE retell_call_id = ${retellCallId}`;
 
   if (!dbCall) {
     return NextResponse.json({ ok: true });

@@ -20,10 +20,10 @@ export async function POST(req: NextRequest) {
 
   const sql = await getDb();
 
-  let [dbCall] = await sql`SELECT * FROM calls WHERE retell_call_id = ${retellCallId}` as { id: string; patient_id: string }[] | undefined[];
+  let [dbCall] = await sql`SELECT * FROM calls WHERE retell_call_id = ${retellCallId}`;
 
   if (!dbCall && callId) {
-    [dbCall] = await sql`SELECT * FROM calls WHERE id = ${callId}` as { id: string; patient_id: string }[] | undefined[];
+    [dbCall] = await sql`SELECT * FROM calls WHERE id = ${callId}`;
     if (dbCall && retellCallId) {
       await sql`UPDATE calls SET retell_call_id = ${retellCallId} WHERE id = ${callId}`;
     }

@@ -68,7 +68,9 @@ async function initSchema() {
   `;
 }
 
-export async function getDb() {
+type SqlClient = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<Record<string, unknown>[]>;
+
+export async function getDb(): Promise<SqlClient> {
   if (!initialized) {
     if (!initPromise) {
       initPromise = initSchema().then(() => {
@@ -77,7 +79,7 @@ export async function getDb() {
     }
     await initPromise;
   }
-  return getClient();
+  return getClient() as unknown as SqlClient;
 }
 
 export default getDb;

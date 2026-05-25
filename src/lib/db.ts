@@ -1,12 +1,19 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.DATABASE_URL!);
-
+let sql: ReturnType<typeof neon> | null = null;
 let initialized = false;
 let initPromise: Promise<void> | null = null;
 
+function getClient() {
+  if (!sql) {
+    sql = neon(process.env.DATABASE_URL!);
+  }
+  return sql;
+}
+
 async function initSchema() {
-  await sql`
+  const db = getClient();
+  await db`
     CREATE TABLE IF NOT EXISTS patients (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -16,7 +23,7 @@ async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS calls (
       id TEXT PRIMARY KEY,
       patient_id TEXT REFERENCES patients(id),
@@ -28,7 +35,7 @@ async function initSchema() {
       completed_at TIMESTAMPTZ
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS notes (
       id TEXT PRIMARY KEY,
       patient_id TEXT REFERENCES patients(id),
@@ -51,7 +58,7 @@ async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
-  await sql`
+  await db`
     CREATE TABLE IF NOT EXISTS consent_logs (
       id TEXT PRIMARY KEY,
       patient_id TEXT REFERENCES patients(id),
@@ -70,7 +77,7 @@ export async function getDb() {
     }
     await initPromise;
   }
-  return sql;
+  return getClient();
 }
 
 export default getDb;

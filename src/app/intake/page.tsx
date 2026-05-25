@@ -38,6 +38,7 @@ export default function IntakePage() {
   const [agentTalking, setAgentTalking] = useState(false);
 
   const retellClientRef = useRef<RetellWebClientType | null>(null);
+  const callDataRef = useRef<{ callId: string; retellCallId?: string } | null>(null);
 
   // ── helpers ──────────────────────────────────────────────────────────────
 
@@ -57,7 +58,14 @@ export default function IntakePage() {
       client.on('call_ended', () => {
         setCallActive(false);
         setCallEnded(true);
-        // Transition to complete after a short pause so the user sees the ended state
+        const cd = callDataRef.current;
+        if (cd?.retellCallId) {
+          fetch('/api/fetch-retell-call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ retellCallId: cd.retellCallId, callId: cd.callId }),
+          }).catch(console.error);
+        }
         setTimeout(() => setStep('complete'), 1500);
       });
 
@@ -94,6 +102,14 @@ export default function IntakePage() {
     retellClientRef.current?.stopCall();
     setCallActive(false);
     setCallEnded(true);
+    const cd = callDataRef.current;
+    if (cd?.retellCallId) {
+      fetch('/api/fetch-retell-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ retellCallId: cd.retellCallId, callId: cd.callId }),
+      }).catch(console.error);
+    }
     setTimeout(() => setStep('complete'), 800);
   }, []);
 
@@ -109,6 +125,7 @@ export default function IntakePage() {
       });
       const data = await res.json();
       setCallData(data);
+      callDataRef.current = { callId: data.callId, retellCallId: data.retellCallId };
       setStep('calling');
 
       // If we got a real accessToken, start the browser audio call immediately
@@ -177,7 +194,7 @@ export default function IntakePage() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="First name only is fine"
+                    placeholder="Full name (as it appears in your records)"
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>

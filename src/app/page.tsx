@@ -57,20 +57,6 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-800">
-            <div className="text-center space-y-1">
-              <p className="text-2xl font-bold text-white">50%</p>
-              <p className="text-sm text-slate-500">Less time gathering context</p>
-            </div>
-            <div className="text-center space-y-1">
-              <p className="text-2xl font-bold text-white">60%</p>
-              <p className="text-sm text-slate-500">Faster note drafting</p>
-            </div>
-            <div className="text-center space-y-1">
-              <p className="text-2xl font-bold text-white">40%</p>
-              <p className="text-sm text-slate-500">Less admin overhead</p>
-            </div>
-          </div>
         </div>
       </main>
 

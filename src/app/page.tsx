@@ -125,7 +125,7 @@ export default function Home() {
           <div className="max-w-2xl mx-auto bg-amber-50 border border-amber-200 rounded-2xl p-6">
             <p className="text-sm font-semibold text-amber-700 uppercase tracking-wider mb-2">Safety Notice</p>
             <p className="text-amber-800 text-sm leading-relaxed">
-              Klarity is an intake tool, not a therapist. It collects information for your licensed provider and doesn&apos;t offer diagnosis, treatment, or crisis support. If you or someone you know is in danger, call{' '}
+              Klarity VoiceNote is an intake tool, not a therapist. It collects information for your licensed provider and doesn&apos;t offer diagnosis, treatment, or crisis support. If you or someone you know is in danger, call{' '}
               <strong>911</strong> or text <strong>988</strong> to reach the Suicide &amp; Crisis Lifeline.
             </p>
           </div>

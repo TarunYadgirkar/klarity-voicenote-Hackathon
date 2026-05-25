@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (!resolvedTranscript) {
+  if (resolvedTranscript === null || resolvedTranscript === undefined) {
     return NextResponse.json({ error: 'No transcript' }, { status: 400 });
   }
 
@@ -98,7 +98,8 @@ export async function POST(req: NextRequest) {
           follow_up_actions = ${JSON.stringify(result.follow_up_actions)},
           chief_concern = ${result.chief_concern},
           symptoms_reported = ${JSON.stringify(result.symptoms_reported)},
-          patient_goals = ${JSON.stringify(result.patient_goals)}
+          patient_goals = ${JSON.stringify(result.patient_goals)},
+          status = ${result.risk.urgent_provider_review ? 'urgent_review' : 'ai_draft'}
         WHERE call_id = ${resolvedCallId}
       `;
     } else {

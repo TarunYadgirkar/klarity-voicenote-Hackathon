@@ -253,7 +253,7 @@ export default function IntakePage() {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 space-y-3 text-sm text-[#0F172A] leading-relaxed">
-                  <p><strong>What this is:</strong> An AI voice assistant that collects intake information for your licensed provider at Klarity Health.</p>
+                  <p><strong>What this is:</strong> Klarity VoiceNote is an AI voice assistant that collects intake information for your licensed provider.</p>
                   <p><strong>What this is not:</strong> This is not therapy, diagnosis, treatment, or crisis support. This AI cannot make medical decisions.</p>
                   <p><strong>Your responses:</strong> Your conversation will be transcribed and summarized. Your provider will review the summary before your appointment.</p>
                   <p><strong>Emergency:</strong> If you are in immediate danger or thinking about harming yourself or others, call 911 or text 988 now.</p>

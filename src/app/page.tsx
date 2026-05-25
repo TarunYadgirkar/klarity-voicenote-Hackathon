@@ -75,7 +75,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-slate-800 px-6 py-4 text-center text-slate-600 text-sm">
-        Built for Klarity Health · Powered by Retell AI · Deployed on Zeabur
+        Built for Klarity Health · Powered by Retell AI · Deployed on Vercel
       </footer>
     </div>
   );

@@ -23,7 +23,7 @@ export default function Home() {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 text-blue-400 text-sm">
               <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-              Powered by Retell + Claude
+              Powered by Retell + Gemini
             </div>
             <h1 className="text-5xl font-bold text-white leading-tight">
               Voice intake that works<br />

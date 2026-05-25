@@ -45,7 +45,7 @@ export default function Home() {
             </h1>
 
             <p className="text-xl text-[#64748B] max-w-xl mx-auto leading-relaxed">
-              Klarity is an AI intake tool for therapists. Your patient talks to an AI before their appointment. By the time they arrive, you already have a clinical note — written, risk-flagged, and ready to review.
+              Klarity VoiceNote is an AI intake tool for therapists. Your patient talks to an AI before their appointment. By the time they arrive, you already have a clinical note — written, risk-flagged, and ready to review.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">

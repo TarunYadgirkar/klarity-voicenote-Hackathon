@@ -214,9 +214,9 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
           </div>
 
           {/* Risk Flags */}
-          {note.risk_flags?.length > 0 && (
-            <section className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
-              <h2 className="font-semibold text-amber-800">⚠ Risk Flags</h2>
+          <section className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+            <h2 className="font-semibold text-amber-800">⚠ Risk Flags</h2>
+            {note.risk_flags?.length > 0 ? (
               <ul className="space-y-1.5">
                 {note.risk_flags.map((flag, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-amber-800">
@@ -225,26 +225,34 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
                   </li>
                 ))}
               </ul>
-            </section>
-          )}
+            ) : (
+              <p className="text-sm text-amber-700 italic">Not enough information was provided during intake to identify specific risk flags.</p>
+            )}
+          </section>
 
           {/* Patient Summary */}
           <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
             <h2 className="font-semibold text-[#0F172A]">Patient Summary</h2>
-            <p className="text-sm text-[#64748B] leading-relaxed">{note.ai_summary}</p>
-            {note.chief_concern && (
-              <div className="pt-2 border-t border-[#E2E8F0]">
-                <p className="text-xs text-[#64748B] font-semibold uppercase tracking-wider mb-1">Chief Concern</p>
-                <p className="text-sm text-[#0F172A]">{note.chief_concern}</p>
-              </div>
+            {note.ai_summary ? (
+              <p className="text-sm text-[#64748B] leading-relaxed">{note.ai_summary}</p>
+            ) : (
+              <p className="text-sm text-[#64748B] italic">Not enough information was provided during intake.</p>
             )}
+            <div className="pt-2 border-t border-[#E2E8F0]">
+              <p className="text-xs text-[#64748B] font-semibold uppercase tracking-wider mb-1">Chief Concern</p>
+              {note.chief_concern ? (
+                <p className="text-sm text-[#0F172A]">{note.chief_concern}</p>
+              ) : (
+                <p className="text-sm text-[#64748B] italic">Not enough information was provided during intake.</p>
+              )}
+            </div>
           </section>
 
           {/* Symptoms & Goals */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {note.symptoms_reported?.length > 0 && (
-              <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
-                <h2 className="font-semibold text-[#0F172A]">Patient-Reported Symptoms</h2>
+            <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
+              <h2 className="font-semibold text-[#0F172A]">Patient-Reported Symptoms</h2>
+              {note.symptoms_reported?.length > 0 ? (
                 <ul className="space-y-1.5">
                   {note.symptoms_reported.map((s, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-[#64748B]">
@@ -253,11 +261,13 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
                     </li>
                   ))}
                 </ul>
-              </section>
-            )}
-            {note.patient_goals?.length > 0 && (
-              <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
-                <h2 className="font-semibold text-[#0F172A]">Patient Goals</h2>
+              ) : (
+                <p className="text-sm text-[#64748B] italic">Not enough information was provided during intake.</p>
+              )}
+            </section>
+            <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
+              <h2 className="font-semibold text-[#0F172A]">Patient Goals</h2>
+              {note.patient_goals?.length > 0 ? (
                 <ul className="space-y-1.5">
                   {note.patient_goals.map((g, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-[#64748B]">
@@ -266,8 +276,10 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
                     </li>
                   ))}
                 </ul>
-              </section>
-            )}
+              ) : (
+                <p className="text-sm text-[#64748B] italic">Not enough information was provided during intake.</p>
+              )}
+            </section>
           </div>
 
           {/* SOAP Note */}
@@ -302,9 +314,9 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
           </section>
 
           {/* Suggested Questions */}
-          {note.suggested_questions?.length > 0 && (
-            <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
-              <h2 className="font-semibold text-[#0F172A]">Suggested Provider Questions</h2>
+          <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
+            <h2 className="font-semibold text-[#0F172A]">Suggested Provider Questions</h2>
+            {note.suggested_questions?.length > 0 ? (
               <ol className="space-y-2">
                 {note.suggested_questions.map((q, i) => (
                   <li key={i} className="flex gap-3 text-sm text-[#64748B]">
@@ -313,13 +325,15 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
                   </li>
                 ))}
               </ol>
-            </section>
-          )}
+            ) : (
+              <p className="text-sm text-[#64748B] italic">Not enough information was provided during intake to generate suggested questions.</p>
+            )}
+          </section>
 
           {/* Follow-up */}
-          {note.follow_up_actions?.length > 0 && (
-            <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
-              <h2 className="font-semibold text-[#0F172A]">Follow-Up Actions</h2>
+          <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">
+            <h2 className="font-semibold text-[#0F172A]">Follow-Up Actions</h2>
+            {note.follow_up_actions?.length > 0 ? (
               <ul className="space-y-1.5">
                 {note.follow_up_actions.map((a, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-[#64748B]">
@@ -328,8 +342,10 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
                   </li>
                 ))}
               </ul>
-            </section>
-          )}
+            ) : (
+              <p className="text-sm text-[#64748B] italic">Not enough information was provided during intake to generate follow-up actions.</p>
+            )}
+          </section>
 
           {/* Transcript */}
           <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 space-y-3">

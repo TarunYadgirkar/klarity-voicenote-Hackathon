@@ -48,14 +48,14 @@ Return ONLY valid JSON with these fields:
 
 export async function POST(req: NextRequest) {
   const { callId, transcript, patientId } = await req.json();
-  const db = getDb();
+  const sql = await getDb();
 
   const resolvedCallId = callId;
   let resolvedTranscript = transcript;
   let resolvedPatientId = patientId;
 
   if (!resolvedTranscript && resolvedCallId) {
-    const call = db.prepare('SELECT * FROM calls WHERE id = ?').get(resolvedCallId) as { transcript: string; patient_id: string } | undefined;
+    const [call] = await sql`SELECT * FROM calls WHERE id = ${resolvedCallId}` as { transcript: string; patient_id: string }[] | undefined[];
     if (call) {
       resolvedTranscript = call.transcript;
       resolvedPatientId = call.patient_id;
@@ -83,54 +83,47 @@ export async function POST(req: NextRequest) {
   const noteId = uuidv4();
 
   if (resolvedCallId && resolvedPatientId) {
-    const existing = db.prepare('SELECT id FROM notes WHERE call_id = ?').get(resolvedCallId);
+    const [existing] = await sql`SELECT id FROM notes WHERE call_id = ${resolvedCallId}`;
     if (existing) {
-      db.prepare(`
+      await sql`
         UPDATE notes SET
-          ai_summary = ?, soap_subjective = ?, soap_objective = ?,
-          soap_assessment = ?, soap_plan = ?, risk_level = ?,
-          risk_flags = ?, suggested_questions = ?, follow_up_actions = ?,
-          chief_concern = ?, symptoms_reported = ?, patient_goals = ?
-        WHERE call_id = ?
-      `).run(
-        result.patient_summary,
-        result.soap_note.subjective,
-        result.soap_note.objective,
-        result.soap_note.assessment,
-        result.soap_note.plan,
-        result.risk.level,
-        JSON.stringify(result.risk.flags),
-        JSON.stringify(result.suggested_provider_questions),
-        JSON.stringify(result.follow_up_actions),
-        result.chief_concern,
-        JSON.stringify(result.symptoms_reported),
-        JSON.stringify(result.patient_goals),
-        resolvedCallId
-      );
+          ai_summary = ${result.patient_summary},
+          soap_subjective = ${result.soap_note.subjective},
+          soap_objective = ${result.soap_note.objective},
+          soap_assessment = ${result.soap_note.assessment},
+          soap_plan = ${result.soap_note.plan},
+          risk_level = ${result.risk.level},
+          risk_flags = ${JSON.stringify(result.risk.flags)},
+          suggested_questions = ${JSON.stringify(result.suggested_provider_questions)},
+          follow_up_actions = ${JSON.stringify(result.follow_up_actions)},
+          chief_concern = ${result.chief_concern},
+          symptoms_reported = ${JSON.stringify(result.symptoms_reported)},
+          patient_goals = ${JSON.stringify(result.patient_goals)}
+        WHERE call_id = ${resolvedCallId}
+      `;
     } else {
-      db.prepare(`
+      await sql`
         INSERT INTO notes (
           id, patient_id, call_id, ai_summary, soap_subjective, soap_objective,
           soap_assessment, soap_plan, risk_level, risk_flags, suggested_questions,
-          follow_up_actions, chief_concern, symptoms_reported, patient_goals,
-          status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        noteId, resolvedPatientId, resolvedCallId,
-        result.patient_summary,
-        result.soap_note.subjective,
-        result.soap_note.objective,
-        result.soap_note.assessment,
-        result.soap_note.plan,
-        result.risk.level,
-        JSON.stringify(result.risk.flags),
-        JSON.stringify(result.suggested_provider_questions),
-        JSON.stringify(result.follow_up_actions),
-        result.chief_concern,
-        JSON.stringify(result.symptoms_reported),
-        JSON.stringify(result.patient_goals),
-        result.risk.urgent_provider_review ? 'urgent_review' : 'ai_draft'
-      );
+          follow_up_actions, chief_concern, symptoms_reported, patient_goals, status
+        ) VALUES (
+          ${noteId}, ${resolvedPatientId}, ${resolvedCallId},
+          ${result.patient_summary},
+          ${result.soap_note.subjective},
+          ${result.soap_note.objective},
+          ${result.soap_note.assessment},
+          ${result.soap_note.plan},
+          ${result.risk.level},
+          ${JSON.stringify(result.risk.flags)},
+          ${JSON.stringify(result.suggested_provider_questions)},
+          ${JSON.stringify(result.follow_up_actions)},
+          ${result.chief_concern},
+          ${JSON.stringify(result.symptoms_reported)},
+          ${JSON.stringify(result.patient_goals)},
+          ${result.risk.urgent_provider_review ? 'urgent_review' : 'ai_draft'}
+        )
+      `;
     }
   }
 

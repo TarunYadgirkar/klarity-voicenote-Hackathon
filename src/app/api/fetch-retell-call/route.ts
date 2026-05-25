@@ -18,18 +18,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Retell not configured' }, { status: 400 });
   }
 
-  const db = getDb();
+  const sql = await getDb();
 
-  let dbCall = db
-    .prepare('SELECT * FROM calls WHERE retell_call_id = ?')
-    .get(retellCallId) as { id: string; patient_id: string } | undefined;
+  let [dbCall] = await sql`SELECT * FROM calls WHERE retell_call_id = ${retellCallId}` as { id: string; patient_id: string }[] | undefined[];
 
   if (!dbCall && callId) {
-    dbCall = db
-      .prepare('SELECT * FROM calls WHERE id = ?')
-      .get(callId) as { id: string; patient_id: string } | undefined;
+    [dbCall] = await sql`SELECT * FROM calls WHERE id = ${callId}` as { id: string; patient_id: string }[] | undefined[];
     if (dbCall && retellCallId) {
-      db.prepare('UPDATE calls SET retell_call_id = ? WHERE id = ?').run(retellCallId, callId);
+      await sql`UPDATE calls SET retell_call_id = ${retellCallId} WHERE id = ${callId}`;
     }
   }
 
@@ -51,11 +47,11 @@ export async function POST(req: NextRequest) {
     const durationMs = (callDetails as unknown as Record<string, unknown>)?.duration_ms as number | undefined;
     const duration = durationMs ? Math.floor(durationMs / 1000) : null;
 
-    db.prepare(`
+    await sql`
       UPDATE calls
-      SET status = 'completed', transcript = ?, duration_seconds = ?, completed_at = datetime('now')
-      WHERE id = ?
-    `).run(transcript, duration, dbCall.id);
+      SET status = ${'completed'}, transcript = ${transcript}, duration_seconds = ${duration}, completed_at = NOW()
+      WHERE id = ${dbCall.id}
+    `;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const noteRes = await fetch(`${appUrl}/api/generate-note`, {

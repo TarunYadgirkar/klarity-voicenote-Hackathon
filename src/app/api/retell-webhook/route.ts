@@ -3,7 +3,7 @@ import getDb from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const db = getDb();
+  const sql = await getDb();
 
   const event = body.event;
   const call = body.call;
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   const retellCallId = call.call_id;
-  const dbCall = db.prepare('SELECT * FROM calls WHERE retell_call_id = ?').get(retellCallId) as { id: string; patient_id: string } | undefined;
+  const [dbCall] = await sql`SELECT * FROM calls WHERE retell_call_id = ${retellCallId}` as { id: string; patient_id: string }[] | undefined[];
 
   if (!dbCall) {
     return NextResponse.json({ ok: true });
@@ -23,13 +23,12 @@ export async function POST(req: NextRequest) {
     const transcript = call.transcript || '';
     const duration = call.duration_ms ? Math.floor(call.duration_ms / 1000) : null;
 
-    db.prepare(`
+    await sql`
       UPDATE calls
-      SET status = 'completed', transcript = ?, duration_seconds = ?, completed_at = datetime('now')
-      WHERE id = ?
-    `).run(transcript, duration, dbCall.id);
+      SET status = ${'completed'}, transcript = ${transcript}, duration_seconds = ${duration}, completed_at = NOW()
+      WHERE id = ${dbCall.id}
+    `;
 
-    // Trigger note generation
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     fetch(`${appUrl}/api/generate-note`, {
       method: 'POST',

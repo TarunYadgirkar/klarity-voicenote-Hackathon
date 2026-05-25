@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const db = getDb();
-  const note = db.prepare('SELECT * FROM notes WHERE id = ?').get(id) as Record<string, unknown> | undefined;
+  const sql = await getDb();
+  const [note] = await sql`SELECT * FROM notes WHERE id = ${id}`;
 
   if (!note) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  return NextResponse.json(parseNote(note));
+  return NextResponse.json(parseNote(note as Record<string, unknown>));
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { status, providerEditedNote } = await req.json();
-  const db = getDb();
+  const sql = await getDb();
 
-  db.prepare(`
+  await sql`
     UPDATE notes
-    SET status = ?, provider_edited_note = ?, reviewed_at = datetime('now')
-    WHERE id = ?
-  `).run(status || 'reviewed', providerEditedNote || null, id);
+    SET status = ${status || 'reviewed'}, provider_edited_note = ${providerEditedNote || null}, reviewed_at = NOW()
+    WHERE id = ${id}
+  `;
 
-  const note = db.prepare('SELECT * FROM notes WHERE id = ?').get(id) as Record<string, unknown> | undefined;
-  return NextResponse.json(parseNote(note!));
+  const [note] = await sql`SELECT * FROM notes WHERE id = ${id}`;
+  return NextResponse.json(parseNote(note as Record<string, unknown>));
 }
 
 function parseNote(note: Record<string, unknown>) {

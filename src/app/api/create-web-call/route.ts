@@ -8,17 +8,17 @@ export async function POST(req: NextRequest) {
 
   const patientId = uuidv4();
   const callId = uuidv4();
-  const db = getDb();
+  const sql = await getDb();
 
-  db.prepare(`
+  await sql`
     INSERT INTO patients (id, name, age_range, appointment_type, provider_name)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(patientId, patientName, ageRange || null, appointmentType, 'Dr. Chen');
+    VALUES (${patientId}, ${patientName}, ${ageRange || null}, ${appointmentType}, ${'Dr. Chen'})
+  `;
 
-  db.prepare(`
+  await sql`
     INSERT INTO calls (id, patient_id, status)
-    VALUES (?, ?, 'pending')
-  `).run(callId, patientId);
+    VALUES (${callId}, ${patientId}, ${'pending'})
+  `;
 
   const retellApiKey = process.env.RETELL_API_KEY;
   const agentId = process.env.RETELL_AGENT_ID;
@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
       metadata: { patientId, callId, patientName, appointmentType },
     });
 
-    db.prepare(`
-      UPDATE calls SET retell_call_id = ?, status = 'in_progress' WHERE id = ?
-    `).run(webCall.call_id, callId);
+    await sql`
+      UPDATE calls SET retell_call_id = ${webCall.call_id}, status = ${'in_progress'} WHERE id = ${callId}
+    `;
 
     return NextResponse.json({
       callId,

@@ -5,13 +5,13 @@ import { DEMO_TRANSCRIPT } from '@/lib/demo';
 // One-shot endpoint: generate a note from demo transcript for a given callId
 export async function POST(req: NextRequest) {
   const { callId, patientId } = await req.json();
-  const db = getDb();
+  const sql = await getDb();
 
-  // Update call with demo transcript
-  db.prepare(`UPDATE calls SET transcript = ?, status = 'completed', completed_at = datetime('now') WHERE id = ?`)
-    .run(DEMO_TRANSCRIPT, callId);
+  await sql`
+    UPDATE calls SET transcript = ${DEMO_TRANSCRIPT}, status = ${'completed'}, completed_at = NOW()
+    WHERE id = ${callId}
+  `;
 
-  // Trigger note generation
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const res = await fetch(`${appUrl}/api/generate-note`, {
     method: 'POST',

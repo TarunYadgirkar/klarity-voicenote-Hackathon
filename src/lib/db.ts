@@ -1,35 +1,22 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import { neon } from '@neondatabase/serverless';
 
-const DB_DIR = path.join(process.cwd(), '.data');
-const DB_PATH = path.join(DB_DIR, 'klarity.db');
+const sql = neon(process.env.DATABASE_URL!);
 
-let db: Database.Database;
+let initialized = false;
+let initPromise: Promise<void> | null = null;
 
-function getDb(): Database.Database {
-  if (!db) {
-    if (!fs.existsSync(DB_DIR)) {
-      fs.mkdirSync(DB_DIR, { recursive: true });
-    }
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    initSchema(db);
-  }
-  return db;
-}
-
-function initSchema(db: Database.Database) {
-  db.exec(`
+async function initSchema() {
+  await sql`
     CREATE TABLE IF NOT EXISTS patients (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       age_range TEXT,
       appointment_type TEXT,
       provider_name TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS calls (
       id TEXT PRIMARY KEY,
       patient_id TEXT REFERENCES patients(id),
@@ -37,10 +24,11 @@ function initSchema(db: Database.Database) {
       status TEXT DEFAULT 'pending',
       transcript TEXT,
       duration_seconds INTEGER,
-      created_at TEXT DEFAULT (datetime('now')),
-      completed_at TEXT
-    );
-
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      completed_at TIMESTAMPTZ
+    )
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS notes (
       id TEXT PRIMARY KEY,
       patient_id TEXT REFERENCES patients(id),
@@ -59,17 +47,30 @@ function initSchema(db: Database.Database) {
       patient_goals TEXT DEFAULT '[]',
       status TEXT DEFAULT 'ai_draft',
       provider_edited_note TEXT,
-      reviewed_at TEXT,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-
+      reviewed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS consent_logs (
       id TEXT PRIMARY KEY,
       patient_id TEXT REFERENCES patients(id),
       consented INTEGER DEFAULT 0,
-      consented_at TEXT DEFAULT (datetime('now'))
-    );
-  `);
+      consented_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getDb() {
+  if (!initialized) {
+    if (!initPromise) {
+      initPromise = initSchema().then(() => {
+        initialized = true;
+      });
+    }
+    await initPromise;
+  }
+  return sql;
 }
 
 export default getDb;

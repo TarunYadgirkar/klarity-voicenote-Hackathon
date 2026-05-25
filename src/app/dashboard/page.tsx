@@ -147,10 +147,24 @@ export default function DashboardPage() {
                 )}
               </div>
               <div>
-                {patient.risk_level ? (
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${RISK_COLORS[patient.risk_level] || RISK_COLORS.none}`}>
-                    {patient.risk_level}
-                  </span>
+                {patient.note_id ? (
+                  <select
+                    value={patient.risk_level || 'none'}
+                    onChange={async (e) => {
+                      await fetch(`/api/notes/${patient.note_id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: patient.note_status || 'ai_draft', riskLevel: e.target.value }),
+                      });
+                      void fetchPatients();
+                    }}
+                    className={`text-xs font-medium px-2 py-1 rounded-full border capitalize cursor-pointer bg-transparent ${RISK_COLORS[patient.risk_level || 'none'] || RISK_COLORS.none}`}
+                  >
+                    <option value="none">none</option>
+                    <option value="low">low</option>
+                    <option value="medium">medium</option>
+                    <option value="high">high</option>
+                  </select>
                 ) : (
                   <span className="text-xs text-slate-600">—</span>
                 )}

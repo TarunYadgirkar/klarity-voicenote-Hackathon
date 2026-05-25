@@ -15,12 +15,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { status, providerEditedNote } = await req.json();
+  const { status, providerEditedNote, riskLevel } = await req.json();
   const sql = await getDb();
 
   await sql`
     UPDATE notes
-    SET status = ${status || 'reviewed'}, provider_edited_note = ${providerEditedNote || null}, reviewed_at = NOW()
+    SET
+      status = ${status || 'reviewed'},
+      provider_edited_note = ${providerEditedNote || null},
+      reviewed_at = NOW(),
+      risk_level = COALESCE(${riskLevel || null}, risk_level)
     WHERE id = ${id}
   `;
 

@@ -65,6 +65,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
   const [editing, setEditing] = useState(false);
   const [editedNote, setEditedNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [riskSaving, setRiskSaving] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
 
@@ -89,6 +90,21 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
       setTranscript(data.transcript);
     }
     setShowTranscript(true);
+  }
+
+  async function updateRisk(level: string) {
+    if (!note || riskSaving) return;
+    setRiskSaving(true);
+    const res = await fetch(`/api/notes/${noteId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: note.status, riskLevel: level }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setNote(data);
+    }
+    setRiskSaving(false);
   }
 
   async function approve() {
@@ -144,9 +160,22 @@ export default function NoteDetailPage({ params }: { params: Promise<{ noteId: s
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize ${RISK_COLORS[note.risk_level] || RISK_COLORS.none}`}>
-                {note.risk_level} risk
-              </span>
+              <div className="flex items-center gap-1">
+                {(['none', 'low', 'medium', 'high'] as const).map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => updateRisk(level)}
+                    disabled={riskSaving}
+                    className={`text-xs font-medium px-2.5 py-1 rounded-full border capitalize transition-opacity ${
+                      note.risk_level === level
+                        ? RISK_COLORS[level] || RISK_COLORS.none
+                        : 'bg-slate-800 text-slate-500 border-slate-700 opacity-50 hover:opacity-80'
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                 note.status === 'reviewed' ? 'bg-green-500/20 text-green-400' :
                 note.status === 'urgent_review' ? 'bg-red-500/20 text-red-400' :

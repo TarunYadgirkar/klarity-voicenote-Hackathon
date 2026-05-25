@@ -112,12 +112,13 @@ export default function DashboardPage() {
 
           {/* Table */}
           <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm overflow-hidden">
-            <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] gap-4 px-6 py-3 border-b border-[#E2E8F0] text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+            <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 border-b border-[#E2E8F0] text-xs font-semibold text-[#64748B] uppercase tracking-wider">
               <span>Patient</span>
               <span>Appointment</span>
               <span>Intake</span>
               <span>Risk</span>
               <span>Action</span>
+              <span></span>
             </div>
 
             {loading && (
@@ -136,7 +137,7 @@ export default function DashboardPage() {
             {patients.map((patient, i) => (
               <div
                 key={patient.id}
-                className={`grid grid-cols-[2fr_2fr_1fr_1fr_1fr] gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors ${
+                className={`grid grid-cols-[2fr_2fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors ${
                   i < patients.length - 1 ? 'border-b border-[#E2E8F0]' : ''
                 }`}
               >
@@ -180,6 +181,25 @@ export default function DashboardPage() {
                   ) : (
                     <span className="text-sm text-[#64748B]">—</span>
                   )}
+                </div>
+
+                <div>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Remove ${patient.name} from the queue?`)) return;
+                      await fetch(`/api/patients/${patient.id}`, { method: 'DELETE' });
+                      void fetchPatients();
+                    }}
+                    className="text-[#64748B] hover:text-red-500 transition-colors p-1 rounded"
+                    title="Remove patient"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))}

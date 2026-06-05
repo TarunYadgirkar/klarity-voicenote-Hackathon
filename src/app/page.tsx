@@ -148,14 +148,7 @@ export default function Home() {
             >
               Stop starting every<br />
               session{' '}
-              <span
-                className="text-transparent"
-                style={{
-                  backgroundImage: 'linear-gradient(135deg, #00B894, #00CEB8)',
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                }}
-              >
+              <span className="text-[#00B894]">
                 from nothing.
               </span>
             </motion.h1>
@@ -185,8 +178,7 @@ export default function Home() {
             >
               <Link
                 href="/intake"
-                className="inline-flex items-center justify-center gap-2 text-white font-semibold rounded-xl px-8 py-3 text-sm transition-all duration-200 hover:-translate-y-0.5 min-w-[200px]"
-                style={{ background: 'linear-gradient(135deg, #00B894, #00CEB8)' }}
+                className="inline-flex items-center justify-center gap-2 bg-[#00B894] hover:bg-[#00a07f] text-white font-semibold rounded-xl px-8 py-3 text-sm transition-all duration-200 hover:-translate-y-0.5 min-w-[200px]"
               >
                 Patient Intake →
               </Link>

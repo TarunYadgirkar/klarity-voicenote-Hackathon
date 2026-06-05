@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Retell from 'retell-sdk';
+import { z } from 'zod';
 import getDb from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
+const CreateWebCallSchema = z.object({
+  patientName: z.string().max(200),
+  appointmentType: z.string().max(100),
+  ageRange: z.string().max(50).optional(),
+});
+
 export async function POST(req: NextRequest) {
-  const { patientName, appointmentType, ageRange } = await req.json();
+  const body = await req.json();
+  const parsed = CreateWebCallSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { patientName, appointmentType, ageRange } = parsed.data;
 
   const patientId = uuidv4();
   const callId = uuidv4();
@@ -23,7 +36,7 @@ export async function POST(req: NextRequest) {
   const retellApiKey = process.env.RETELL_API_KEY;
   const agentId = process.env.RETELL_AGENT_ID;
 
-  if (!retellApiKey || !agentId || retellApiKey === 'your_retell_api_key') {
+  if (!retellApiKey || !agentId) {
     return NextResponse.json({
       callId,
       patientId,
@@ -52,6 +65,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error('Retell error:', err);
-    return NextResponse.json({ callId, patientId, demoMode: true, error: String(err) });
+    return NextResponse.json({ callId, patientId, demoMode: true, error: 'Internal server error' });
   }
 }

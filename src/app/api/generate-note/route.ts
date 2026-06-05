@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import type { NoteGenerationResult } from '@/types';
 
 const PROMPT = `You are an AI clinical documentation assistant for a mental health provider marketplace.
@@ -46,8 +47,20 @@ Return ONLY valid JSON with these fields:
   "missing_information": []
 }`;
 
+const GenerateNoteSchema = z.object({
+  callId: z.string().uuid().optional(),
+  transcript: z.string().max(50000).optional(),
+  patientId: z.string().max(200).optional(),
+});
+
 export async function POST(req: NextRequest) {
-  const { callId, transcript, patientId } = await req.json();
+  const body = await req.json();
+  const parsed = GenerateNoteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { callId, transcript, patientId } = parsed.data;
   const sql = await getDb();
 
   const resolvedCallId = callId;
@@ -57,8 +70,8 @@ export async function POST(req: NextRequest) {
   if (!resolvedTranscript && resolvedCallId) {
     const [call] = await sql`SELECT * FROM calls WHERE id = ${resolvedCallId}`;
     if (call) {
-      resolvedTranscript = call.transcript;
-      resolvedPatientId = call.patient_id;
+      resolvedTranscript = call.transcript as string;
+      resolvedPatientId = call.patient_id as string;
     }
   }
 
@@ -69,7 +82,7 @@ export async function POST(req: NextRequest) {
   const geminiKey = process.env.GEMINI_API_KEY;
   let result: NoteGenerationResult;
 
-  if (!geminiKey || geminiKey === 'your_gemini_api_key_here') {
+  if (!geminiKey) {
     result = getDemoNote();
   } else {
     try {
@@ -134,10 +147,13 @@ export async function POST(req: NextRequest) {
 async function generateNoteWithGemini(apiKey: string, transcript: string): Promise<NoteGenerationResult> {
   const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
       body: JSON.stringify({
         contents: [
           {

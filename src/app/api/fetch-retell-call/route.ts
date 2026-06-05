@@ -4,17 +4,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Retell from 'retell-sdk';
+import { z } from 'zod';
 import getDb from '@/lib/db';
 
-export async function POST(req: NextRequest) {
-  const { retellCallId, callId } = await req.json();
+const FetchRetellCallSchema = z.object({
+  retellCallId: z.string().max(200),
+  callId: z.string().uuid().optional(),
+});
 
-  if (!retellCallId) {
-    return NextResponse.json({ error: 'retellCallId is required' }, { status: 400 });
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const parsed = FetchRetellCallSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
   }
 
+  const { retellCallId, callId } = parsed.data;
+
   const retellApiKey = process.env.RETELL_API_KEY;
-  if (!retellApiKey || retellApiKey === 'your_retell_secret_key_here') {
+  if (!retellApiKey) {
     return NextResponse.json({ error: 'Retell not configured' }, { status: 400 });
   }
 
@@ -70,6 +78,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, callId: dbCall.id, noteId, hasTranscript: !!transcript });
   } catch (err) {
     console.error('fetch-retell-call error:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import getDb from '@/lib/db';
 import { DEMO_TRANSCRIPT } from '@/lib/demo';
 
-// One-shot endpoint: generate a note from demo transcript for a given callId
+const DemoNoteSchema = z.object({
+  callId: z.string().uuid(),
+  patientId: z.string().max(200),
+});
+
 export async function POST(req: NextRequest) {
-  const { callId, patientId } = await req.json();
+  const body = await req.json();
+  const parsed = DemoNoteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { callId, patientId } = parsed.data;
   const sql = await getDb();
 
   await sql`

@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import getDb from '@/lib/db';
+
+const PatchNoteSchema = z.object({
+  status: z.enum(['reviewed', 'urgent_review', 'ai_draft']),
+  riskLevel: z.enum(['none', 'low', 'medium', 'high']).optional(),
+  providerEditedNote: z.string().max(10000).optional(),
+});
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,16 +22,22 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { status, providerEditedNote, riskLevel } = await req.json();
+  const body = await req.json();
+  const parsed = PatchNoteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { status, providerEditedNote, riskLevel } = parsed.data;
   const sql = await getDb();
 
   await sql`
     UPDATE notes
     SET
-      status = ${status || 'reviewed'},
-      provider_edited_note = ${providerEditedNote || null},
+      status = ${status},
+      provider_edited_note = ${providerEditedNote ?? null},
       reviewed_at = NOW(),
-      risk_level = COALESCE(${riskLevel || null}, risk_level)
+      risk_level = COALESCE(${riskLevel ?? null}, risk_level)
     WHERE id = ${id}
   `;
 
@@ -33,12 +46,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 function parseNote(note: Record<string, unknown>) {
+  function safeParseArray(value: unknown): unknown[] {
+    try {
+      const parsed = JSON.parse((value as string) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
   return {
     ...note,
-    risk_flags: JSON.parse((note.risk_flags as string) || '[]'),
-    suggested_questions: JSON.parse((note.suggested_questions as string) || '[]'),
-    follow_up_actions: JSON.parse((note.follow_up_actions as string) || '[]'),
-    symptoms_reported: JSON.parse((note.symptoms_reported as string) || '[]'),
-    patient_goals: JSON.parse((note.patient_goals as string) || '[]'),
+    risk_flags: safeParseArray(note.risk_flags),
+    suggested_questions: safeParseArray(note.suggested_questions),
+    follow_up_actions: safeParseArray(note.follow_up_actions),
+    symptoms_reported: safeParseArray(note.symptoms_reported),
+    patient_goals: safeParseArray(note.patient_goals),
   };
 }

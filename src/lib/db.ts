@@ -1,10 +1,10 @@
-import { neon } from '@neondatabase/serverless';
+import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 
-let sql: ReturnType<typeof neon> | null = null;
+let sql: NeonQueryFunction<false, false> | null = null;
 let initialized = false;
 let initPromise: Promise<void> | null = null;
 
-function getClient() {
+function getClient(): NeonQueryFunction<false, false> {
   if (!sql) {
     sql = neon(process.env.DATABASE_URL!);
   }
@@ -68,9 +68,7 @@ async function initSchema() {
   `;
 }
 
-type SqlClient = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<Record<string, unknown>[]>;
-
-export async function getDb(): Promise<SqlClient> {
+export async function getDb(): Promise<NeonQueryFunction<false, false>> {
   if (!initialized) {
     if (!initPromise) {
       initPromise = initSchema().then(() => {
@@ -79,7 +77,7 @@ export async function getDb(): Promise<SqlClient> {
     }
     await initPromise;
   }
-  return getClient() as unknown as SqlClient;
+  return getClient();
 }
 
 export default getDb;

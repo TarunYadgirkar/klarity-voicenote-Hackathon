@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -28,16 +29,48 @@ const STATUS_BADGE: Record<string, { bg: string; label: string }> = {
   reviewed:      { bg: 'bg-emerald-50 text-emerald-600', label: 'Reviewed' },
 };
 
-type StatCardProps = { label: string; value: number; color: string; icon: string };
+function IconUsers() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
 
-function StatCard({ label, value, color, icon }: StatCardProps) {
+function IconClock() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+function IconAlertTriangle() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+type StatCardProps = { label: string; value: number; color: string; icon: React.ReactNode; iconColor: string };
+
+function StatCard({ label, value, color, icon, iconColor }: StatCardProps) {
   return (
     <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-5 flex items-start justify-between">
       <div>
         <p className="text-[#64748B] text-xs font-semibold uppercase tracking-widest mb-2">{label}</p>
         <p className={`text-3xl font-bold tabular-nums ${color}`}>{value}</p>
       </div>
-      <span className="text-2xl opacity-60">{icon}</span>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconColor}`}>
+        {icon}
+      </div>
     </div>
   );
 }
@@ -112,9 +145,9 @@ export default function DashboardPage() {
 
           {/* ── Stats ── */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <StatCard label="Total Patients" value={patients.length} color="text-[#0F172A]" icon="👥" />
-            <StatCard label="Pending Review"  value={pending.length}  color="text-amber-600"  icon="⏳" />
-            <StatCard label="High Risk"       value={highRisk.length} color="text-red-600"    icon="⚠️" />
+            <StatCard label="Total Patients" value={patients.length} color="text-[#0F172A]" icon={<IconUsers />}         iconColor="bg-slate-100 text-slate-500" />
+            <StatCard label="Pending Review"  value={pending.length}  color="text-amber-600"  icon={<IconClock />}          iconColor="bg-amber-50 text-amber-500" />
+            <StatCard label="High Risk"       value={highRisk.length} color="text-red-600"    icon={<IconAlertTriangle />}  iconColor="bg-red-50 text-red-500" />
           </div>
 
           {/* ── Urgent banner ── */}
@@ -143,14 +176,18 @@ export default function DashboardPage() {
 
             {loading && (
               <div className="px-6 py-16 text-center">
-                <div className="w-8 h-8 border-2 border-[#00B894]/30 border-t-[#00B894] rounded-full animate-spin mx-auto mb-3" />
+                <div className="w-8 h-8 border-2 border-[#00B894]/30 border-t-[#00B894] rounded animate-spin mx-auto mb-3" />
                 <p className="text-[#64748B] text-sm">Loading patients…</p>
               </div>
             )}
 
             {!loading && patients.length === 0 && (
               <div className="px-6 py-16 text-center space-y-3">
-                <p className="text-4xl">🗂</p>
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
                 <p className="text-[#64748B] font-medium">No patients yet.</p>
                 <Link href="/intake" className="text-[#00B894] hover:text-[#00897B] font-semibold text-sm transition-colors">
                   Start an intake →
@@ -182,19 +219,19 @@ export default function DashboardPage() {
 
                 <div>
                   {patient.note_status ? (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[patient.note_status]?.bg ?? 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded ${STATUS_BADGE[patient.note_status]?.bg ?? 'bg-slate-100 text-slate-500'}`}>
                       {STATUS_BADGE[patient.note_status]?.label ?? patient.note_status}
                     </span>
                   ) : patient.call_status === 'completed' ? (
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">Processing…</span>
+                    <span className="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-500">Processing…</span>
                   ) : (
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-400">Pending</span>
+                    <span className="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-400">Pending</span>
                   )}
                 </div>
 
                 <div>
                   {patient.note_id ? (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${RISK_BADGE[patient.risk_level ?? 'none'] ?? RISK_BADGE.none}`}>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded capitalize ${RISK_BADGE[patient.risk_level ?? 'none'] ?? RISK_BADGE.none}`}>
                       {patient.risk_level ?? 'none'}
                     </span>
                   ) : (

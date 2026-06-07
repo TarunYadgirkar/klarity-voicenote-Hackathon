@@ -207,7 +207,7 @@ export default function IntakePage() {
     : 'idle';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-dvh bg-[#F8FAFC] flex flex-col">
       {/* ── Nav ── */}
       <nav className="bg-white border-b border-[#E2E8F0] px-6 py-4 flex items-center justify-between">
         <Link href="/" className="font-bold text-xl text-[#00B894] tracking-tight">Klarity VoiceNote</Link>

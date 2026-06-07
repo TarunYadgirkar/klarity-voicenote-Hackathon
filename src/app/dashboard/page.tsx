@@ -168,7 +168,7 @@ export default function DashboardPage() {
 
           {/* ── Table ── */}
           <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm overflow-hidden">
-            <div className="grid grid-cols-[1.8fr_1.8fr_1fr_1fr_auto_auto] gap-4 px-6 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
+            <div className="hidden sm:grid sm:grid-cols-[1.8fr_1.8fr_1fr_1fr_auto_auto] gap-4 px-6 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC]">
               {['Patient', 'Appointment', 'Status', 'Risk', 'Action', ''].map((h) => (
                 <span key={h} className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-widest">{h}</span>
               ))}
@@ -195,83 +195,106 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {patients.map((patient, i) => (
-              <motion.div
-                key={patient.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.04 }}
-                className={`grid grid-cols-[1.8fr_1.8fr_1fr_1fr_auto_auto] gap-4 px-6 py-4 items-center hover:bg-[#F8FAFC] transition-colors group ${
-                  i < patients.length - 1 ? 'border-b border-[#E2E8F0]' : ''
-                } ${patient.risk_level === 'high' ? 'bg-red-50/30' : ''}`}
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    {patient.risk_level === 'high' && <RiskDot level="high" />}
-                    <p className="font-semibold text-[#0F172A] truncate">{patient.name}</p>
+            {patients.map((patient, i) => {
+              const statusBadge = patient.note_status ? (
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded ${STATUS_BADGE[patient.note_status]?.bg ?? 'bg-slate-100 text-slate-500'}`}>
+                  {STATUS_BADGE[patient.note_status]?.label ?? patient.note_status}
+                </span>
+              ) : patient.call_status === 'completed' ? (
+                <span className="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-500">Processing…</span>
+              ) : (
+                <span className="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-400">Pending</span>
+              );
+
+              const riskBadge = patient.note_id ? (
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded capitalize ${RISK_BADGE[patient.risk_level ?? 'none'] ?? RISK_BADGE.none}`}>
+                  {patient.risk_level ?? 'none'}
+                </span>
+              ) : (
+                <span className="text-[#94A3B8] text-sm">—</span>
+              );
+
+              const noteLink = patient.note_id ? (
+                <Link
+                  href={`/dashboard/${patient.note_id}`}
+                  className="text-sm text-[#00B894] hover:text-[#00897B] font-semibold transition-colors whitespace-nowrap"
+                >
+                  View Note →
+                </Link>
+              ) : (
+                <span className="text-sm text-[#94A3B8]">—</span>
+              );
+
+              const deleteButton = (
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Remove ${patient.name} from the queue?`)) return;
+                    await fetch(`/api/patients/${patient.id}`, { method: 'DELETE' });
+                    void fetchPatients();
+                  }}
+                  className="p-2 rounded-lg text-[#CBD5E1] hover:text-red-400 hover:bg-red-50 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                  title="Remove patient"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                  </svg>
+                </button>
+              );
+
+              const formattedDate = new Date(patient.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+              return (
+                <motion.div
+                  key={patient.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.04 }}
+                  className={`px-6 py-4 hover:bg-[#F8FAFC] transition-colors group ${
+                    i < patients.length - 1 ? 'border-b border-[#E2E8F0]' : ''
+                  } ${patient.risk_level === 'high' ? 'bg-red-50/30' : ''}`}
+                >
+                  {/* Desktop row */}
+                  <div className="hidden sm:grid sm:grid-cols-[1.8fr_1.8fr_1fr_1fr_auto_auto] sm:gap-4 sm:items-center">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        {patient.risk_level === 'high' && <RiskDot level="high" />}
+                        <p className="font-semibold text-[#0F172A] truncate">{patient.name}</p>
+                      </div>
+                      <p className="text-xs text-[#94A3B8] mt-0.5">{formattedDate}</p>
+                    </div>
+                    <p className="text-sm text-[#64748B] truncate">{patient.appointment_type}</p>
+                    <div>{statusBadge}</div>
+                    <div>{riskBadge}</div>
+                    <div>{noteLink}</div>
+                    <div>{deleteButton}</div>
                   </div>
-                  <p className="text-xs text-[#94A3B8] mt-0.5">
-                    {new Date(patient.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
 
-                <p className="text-sm text-[#64748B] truncate">{patient.appointment_type}</p>
-
-                <div>
-                  {patient.note_status ? (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded ${STATUS_BADGE[patient.note_status]?.bg ?? 'bg-slate-100 text-slate-500'}`}>
-                      {STATUS_BADGE[patient.note_status]?.label ?? patient.note_status}
-                    </span>
-                  ) : patient.call_status === 'completed' ? (
-                    <span className="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-500">Processing…</span>
-                  ) : (
-                    <span className="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-400">Pending</span>
-                  )}
-                </div>
-
-                <div>
-                  {patient.note_id ? (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded capitalize ${RISK_BADGE[patient.risk_level ?? 'none'] ?? RISK_BADGE.none}`}>
-                      {patient.risk_level ?? 'none'}
-                    </span>
-                  ) : (
-                    <span className="text-[#94A3B8] text-sm">—</span>
-                  )}
-                </div>
-
-                <div>
-                  {patient.note_id ? (
-                    <Link
-                      href={`/dashboard/${patient.note_id}`}
-                      className="text-sm text-[#00B894] hover:text-[#00897B] font-semibold transition-colors whitespace-nowrap"
-                    >
-                      View Note →
-                    </Link>
-                  ) : (
-                    <span className="text-sm text-[#94A3B8]">—</span>
-                  )}
-                </div>
-
-                <div>
-                  <button
-                    onClick={async () => {
-                      if (!confirm(`Remove ${patient.name} from the queue?`)) return;
-                      await fetch(`/api/patients/${patient.id}`, { method: 'DELETE' });
-                      void fetchPatients();
-                    }}
-                    className="p-2 rounded-lg text-[#CBD5E1] hover:text-red-400 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                    title="Remove patient"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                      <path d="M10 11v6M14 11v6" />
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                    </svg>
-                  </button>
-                </div>
-              </motion.div>
-            ))}
+                  {/* Mobile card */}
+                  <div className="sm:hidden space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          {patient.risk_level === 'high' && <RiskDot level="high" />}
+                          <p className="font-semibold text-[#0F172A] truncate">{patient.name}</p>
+                        </div>
+                        <p className="text-xs text-[#94A3B8] mt-0.5 truncate">{formattedDate} · {patient.appointment_type}</p>
+                      </div>
+                      {deleteButton}
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {statusBadge}
+                        {riskBadge}
+                      </div>
+                      {noteLink}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
       </main>

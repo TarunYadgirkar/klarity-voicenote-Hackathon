@@ -2,13 +2,29 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { Fraunces, IBM_Plex_Sans } from 'next/font/google';
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-fraunces',
+});
+
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-sans',
+});
+
+const serif = { fontFamily: 'var(--font-fraunces)' };
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
 };
 
 const fadeUp = {
-  initial: { opacity: 0, y: 28 },
+  initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' as const } },
 };
 
@@ -53,21 +69,6 @@ const noteFields = [
   'Full Transcript',
 ];
 
-function VoiceWave({ active = true }: { active?: boolean }) {
-  const barClass = active ? 'voice-bar-active' : 'voice-bar';
-  const heights = ['h-4', 'h-8', 'h-12', 'h-16', 'h-12', 'h-8', 'h-4'];
-  return (
-    <div className="flex items-end gap-[5px] h-16">
-      {heights.map((h, i) => (
-        <div
-          key={i}
-          className={`w-[5px] rounded-full bg-[#00B894] ${h} ${barClass}`}
-        />
-      ))}
-    </div>
-  );
-}
-
 function IconUser() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -87,14 +88,6 @@ function IconStethoscope() {
   );
 }
 
-function IconCheck() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
 function IconAlert() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -105,112 +98,157 @@ function IconAlert() {
   );
 }
 
+function TranscriptCard() {
+  return (
+    <div className="relative">
+      <div className="absolute -top-3 -left-4 sm:-left-7 z-10 bg-[#20283B] text-[#F6F1E7] text-[10px] font-semibold uppercase tracking-[0.22em] px-3 py-1.5 rounded-full -rotate-3 shadow-md">
+        Live during intake
+      </div>
+      <div className="bg-[#FFFDF7] border border-[#20283B]/10 rounded-2xl p-6 sm:p-7 shadow-[0_24px_60px_-24px_rgba(32,40,59,0.25)] rotate-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5B6479] mb-4">
+          Spoken → structured, in real time
+        </p>
+        <p style={serif} className="italic text-[#20283B]/75 text-[15px] sm:text-base leading-relaxed mb-6">
+          “…honestly I haven&apos;t been sleeping much, maybe three hours a night, and I keep{' '}
+          <span className="not-italic [box-decoration-break:clone] bg-[#00B894]/30 px-1 rounded-[2px]">
+            replaying conversations
+          </span>{' '}
+          in my head before I can drift off…”
+        </p>
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between gap-3 text-sm border-t border-[#20283B]/10 pt-2.5">
+            <span className="text-[#5B6479]">↳ Symptom</span>
+            <span className="font-medium text-[#20283B] text-right">Sleep disruption · ~3 hrs/night</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-sm border-t border-[#20283B]/10 pt-2.5">
+            <span className="text-[#5B6479]">↳ Risk flag</span>
+            <span className="font-medium text-amber-700 text-right">Rumination — medium</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-sm border-t border-[#20283B]/10 pt-2.5">
+            <span className="text-[#5B6479]">↳ Suggested question</span>
+            <span className="font-medium text-[#20283B] text-right">&ldquo;What does bedtime look like for you?&rdquo;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* ── Nav ── */}
-      <nav className="absolute top-0 left-0 right-0 z-20 px-8 py-5 flex items-center justify-between">
-        <span className="font-bold text-lg text-white tracking-tight">Klarity VoiceNote</span>
-        <Link
-          href="/dashboard"
-          className="text-sm text-white/60 hover:text-white transition-colors"
-        >
-          Provider Dashboard →
-        </Link>
-      </nav>
-
+    <div
+      className={`${fraunces.variable} ${plexSans.variable} flex flex-col min-h-screen bg-[#F6F1E7] text-[#20283B]`}
+      style={{ fontFamily: 'var(--font-plex-sans)' }}
+    >
       {/* ── Hero ── */}
-      <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-[#070f1e]">
-        {/* Subtle noise texture overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")',
-            backgroundRepeat: 'repeat',
-            backgroundSize: '200px 200px',
-          }}
-        />
-
-        {/* Tight radial glow — no drifting blobs */}
+      <section className="relative overflow-hidden">
+        {/* Dot-grid paper texture */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,184,148,0.12) 0%, transparent 70%)',
+            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(32,40,59,0.07) 1px, transparent 0)',
+            backgroundSize: '26px 26px',
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 70% 45% at 85% -10%, rgba(0,184,148,0.16) 0%, transparent 65%)',
           }}
         />
 
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-8">
-            <motion.h1
-              variants={fadeUp}
-              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.05] tracking-tight"
+        <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8">
+          {/* ── Masthead nav ── */}
+          <nav className="flex items-center justify-between pt-8 pb-6 border-b border-[#20283B]/12">
+            <span style={serif} className="text-xl text-[#20283B] tracking-tight">
+              Klarity VoiceNote
+            </span>
+            <Link
+              href="/dashboard"
+              className="text-sm text-[#5B6479] hover:text-[#20283B] font-medium transition-colors"
             >
-              Stop starting every<br />
-              session{' '}
-              <span className="text-[#00B894]">
-                from nothing.
-              </span>
-            </motion.h1>
+              Provider Dashboard →
+            </Link>
+          </nav>
 
-            <motion.p
-              variants={fadeUp}
-              className="text-base sm:text-lg text-white/50 max-w-xl mx-auto leading-relaxed"
-            >
-              Your patient speaks with an AI before their appointment.
-              By the time they arrive, you already have a clinical note —
-              written, risk-flagged, and ready to review.
-            </motion.p>
+          <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-16 lg:gap-14 items-center py-20 sm:py-28">
+            <motion.div variants={stagger} initial="initial" animate="animate">
+              <motion.div
+                variants={fadeUp}
+                className="flex items-center gap-3 mb-7 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#5B6479]"
+              >
+                <span className="h-px w-9 bg-[#20283B]/30" />
+                Field notes for mental health practices
+              </motion.div>
 
-            {/* Voice wave visual */}
-            <motion.div variants={fadeUp} className="flex justify-center py-2">
-              <div className="flex flex-col items-center gap-4">
-                <VoiceWave active={true} />
-                <p className="text-white/25 text-xs tracking-widest uppercase">
-                  AI listening · 3:42
-                </p>
-              </div>
+              <motion.h1
+                variants={fadeUp}
+                style={serif}
+                className="text-[2.6rem] sm:text-6xl lg:text-[5.25rem] text-[#20283B] leading-[1.05] tracking-tight"
+              >
+                Stop starting every session{' '}
+                <span className="relative inline-block whitespace-nowrap">
+                  <span className="relative z-10">from nothing.</span>
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 bottom-[0.12em] h-[0.34em] bg-[#00B894]/40 -rotate-1 -z-0"
+                  />
+                </span>
+              </motion.h1>
+
+              <motion.p
+                variants={fadeUp}
+                className="mt-7 text-base sm:text-lg text-[#5B6479] max-w-lg leading-relaxed"
+              >
+                Your patient speaks with an AI before their appointment. By the time
+                they arrive, you already have a clinical note — written, risk-flagged,
+                and ready to review.
+              </motion.p>
+
+              <motion.div
+                variants={fadeUp}
+                className="mt-10 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-9"
+              >
+                <Link
+                  href="/intake"
+                  className="group inline-flex items-center gap-2 text-[#20283B] font-semibold text-base border-b-2 border-[#00B894] pb-1 transition-all duration-200 hover:gap-3 w-fit"
+                >
+                  Start a patient intake
+                  <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="text-[#5B6479] hover:text-[#20283B] text-sm font-medium transition-colors w-fit"
+                >
+                  Or open the provider dashboard
+                </Link>
+              </motion.div>
             </motion.div>
 
             <motion.div
-              variants={fadeUp}
-              className="flex flex-col sm:flex-row gap-3 justify-center items-center"
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="hidden lg:block"
             >
-              <Link
-                href="/intake"
-                className="inline-flex items-center justify-center gap-2 bg-[#00B894] hover:bg-[#00a07f] text-white font-semibold rounded-xl px-8 py-3 text-sm transition-all duration-200 hover:-translate-y-0.5 min-w-[200px]"
-              >
-                Patient Intake →
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 bg-white/8 hover:bg-white/12 border border-white/15 text-white font-medium rounded-xl px-8 py-3 text-sm transition-all duration-200 min-w-[200px]"
-              >
-                Provider Dashboard
-              </Link>
+              <TranscriptCard />
             </motion.div>
-          </motion.div>
+          </div>
         </div>
-
-        {/* Bottom fade */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent, #F8FAFC)' }}
-        />
       </section>
 
       {/* ── How it works ── */}
-      <section className="bg-[#F8FAFC] px-6 py-24">
+      <section className="bg-[#FFFDF7] px-6 sm:px-8 py-20 sm:py-28 border-t border-[#20283B]/12">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="mb-14"
+            className="mb-14 max-w-xl"
           >
-            <p className="text-xs font-semibold text-[#00B894] uppercase tracking-widest mb-3">How it works</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#0F172A]">Two flows. One outcome.</h2>
+            <p style={serif} className="italic text-[#00897B] text-lg mb-2">How it works</p>
+            <h2 style={serif} className="text-3xl sm:text-4xl text-[#20283B]">Two flows. One outcome.</h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -220,23 +258,23 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white rounded-2xl p-8 shadow-sm border border-[#E2E8F0]"
+              className="bg-[#F6F1E7] rounded-2xl p-8 border border-[#20283B]/10"
             >
               <div className="flex items-center gap-2.5 mb-7">
-                <div className="w-7 h-7 rounded-lg bg-[#00B894]/10 flex items-center justify-center text-[#00B894]">
+                <div className="w-7 h-7 rounded-lg bg-[#00B894]/12 flex items-center justify-center text-[#00897B]">
                   <IconUser />
                 </div>
-                <p className="font-semibold text-[#0F172A] text-sm">For patients</p>
+                <p className="font-semibold text-[#20283B] text-sm">For patients</p>
               </div>
               <div className="space-y-5">
                 {patientSteps.map((s, i) => (
                   <div key={i} className="flex items-start gap-4">
-                    <div className="w-7 h-7 rounded-full bg-[#00B894]/10 text-[#00B894] font-bold text-xs flex items-center justify-center shrink-0 tabular-nums">
+                    <span style={serif} className="italic text-[#00897B] text-lg w-6 shrink-0 text-right tabular-nums">
                       {i + 1}
-                    </div>
+                    </span>
                     <div>
-                      <p className="font-semibold text-[#0F172A] text-sm">{s.title}</p>
-                      <p className="text-[#64748B] text-sm mt-0.5 leading-relaxed">{s.text}</p>
+                      <p className="font-semibold text-[#20283B] text-sm">{s.title}</p>
+                      <p className="text-[#5B6479] text-sm mt-0.5 leading-relaxed">{s.text}</p>
                     </div>
                   </div>
                 ))}
@@ -249,10 +287,10 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-[#070f1e] rounded-2xl p-8 shadow-sm border border-white/5"
+              className="bg-[#20283B] rounded-2xl p-8 border border-white/5"
             >
               <div className="flex items-center gap-2.5 mb-7">
-                <div className="w-7 h-7 rounded-lg bg-[#00B894]/20 flex items-center justify-center text-[#00B894]">
+                <div className="w-7 h-7 rounded-lg bg-[#00B894]/20 flex items-center justify-center text-[#00CEB8]">
                   <IconStethoscope />
                 </div>
                 <p className="font-semibold text-white text-sm">For providers</p>
@@ -260,9 +298,9 @@ export default function Home() {
               <div className="space-y-5">
                 {providerSteps.map((s, i) => (
                   <div key={i} className="flex items-start gap-4">
-                    <div className="w-7 h-7 rounded-full bg-[#00B894]/20 text-[#00CEB8] font-bold text-xs flex items-center justify-center shrink-0 tabular-nums">
+                    <span style={serif} className="italic text-[#00CEB8] text-lg w-6 shrink-0 text-right tabular-nums">
                       {i + 1}
-                    </div>
+                    </span>
                     <div>
                       <p className="font-semibold text-white text-sm">{s.title}</p>
                       <p className="text-white/45 text-sm mt-0.5 leading-relaxed">{s.text}</p>
@@ -289,18 +327,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── What you get ── */}
-      <section className="bg-white px-6 py-20 border-t border-[#E2E8F0]">
+      {/* ── What you get — table of contents ── */}
+      <section className="bg-[#F6F1E7] px-6 sm:px-8 py-20 sm:py-28 border-t border-[#20283B]/12">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="mb-12"
+            className="mb-14 max-w-xl"
           >
-            <p className="text-xs font-semibold text-[#00B894] uppercase tracking-widest mb-3">Documentation</p>
-            <h2 className="text-3xl font-bold text-[#0F172A]">Everything in the note</h2>
+            <p style={serif} className="italic text-[#00897B] text-lg mb-2">Documentation</p>
+            <h2 style={serif} className="text-3xl sm:text-4xl text-[#20283B]">Everything in the note, indexed.</h2>
           </motion.div>
 
           <motion.div
@@ -308,21 +346,17 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#E2E8F0] rounded-2xl overflow-hidden"
+            className="grid sm:grid-cols-2 gap-x-14"
           >
             {noteFields.map((label, i) => (
               <div
                 key={label}
-                className={`flex items-center gap-3 px-5 py-4 bg-white hover:bg-[#F8FAFC] transition-colors ${
-                  i < noteFields.length - 4 ? 'border-b border-[#E2E8F0]' : ''
-                } ${i % 4 !== 3 ? 'sm:border-r border-[#E2E8F0]' : ''} ${
-                  i % 2 !== 1 ? 'border-r border-[#E2E8F0] sm:border-r-0' : ''
-                } ${i % 2 !== 1 && i % 4 !== 3 ? 'sm:border-r border-[#E2E8F0]' : ''}`}
+                className="flex items-baseline gap-4 py-4 border-b border-[#20283B]/12"
               >
-                <span className="text-[#00B894] shrink-0">
-                  <IconCheck />
+                <span style={serif} className="italic text-[#00B894] text-lg w-8 shrink-0 tabular-nums">
+                  {String(i + 1).padStart(2, '0')}
                 </span>
-                <p className="text-sm font-medium text-[#0F172A]">{label}</p>
+                <span className="text-[#20283B] font-medium">{label}</span>
               </div>
             ))}
           </motion.div>
@@ -330,7 +364,7 @@ export default function Home() {
       </section>
 
       {/* ── Safety ── */}
-      <section className="bg-[#F8FAFC] px-6 py-14 border-t border-[#E2E8F0]">
+      <section className="bg-[#FFFDF7] px-6 sm:px-8 py-14 border-t border-[#20283B]/12">
         <div className="max-w-2xl mx-auto">
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex gap-3.5">
             <div className="text-amber-500 shrink-0 mt-0.5">
@@ -348,13 +382,13 @@ export default function Home() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="bg-white border-t border-[#E2E8F0] px-8 py-5">
+      <footer className="bg-[#F6F1E7] border-t border-[#20283B]/12 px-6 sm:px-8 py-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="font-bold text-[#00B894] tracking-tight text-sm">Klarity VoiceNote</span>
-          <p className="text-[#94A3B8] text-xs">AI-powered intake for mental health providers</p>
+          <span style={serif} className="italic text-[#00897B] tracking-tight text-sm">Klarity VoiceNote</span>
+          <p className="text-[#5B6479] text-xs">AI-powered intake for mental health providers</p>
           <div className="flex items-center gap-5 text-sm">
-            <Link href="/intake" className="text-[#64748B] hover:text-[#0F172A] transition-colors text-xs">Patient Intake</Link>
-            <Link href="/dashboard" className="text-[#64748B] hover:text-[#0F172A] transition-colors text-xs">Dashboard</Link>
+            <Link href="/intake" className="text-[#5B6479] hover:text-[#20283B] transition-colors text-xs">Patient Intake</Link>
+            <Link href="/dashboard" className="text-[#5B6479] hover:text-[#20283B] transition-colors text-xs">Dashboard</Link>
           </div>
         </div>
       </footer>
